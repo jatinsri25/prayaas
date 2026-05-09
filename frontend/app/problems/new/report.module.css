@@ -1,0 +1,151 @@
+.voiceBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 32px;
+  border: 2px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.3s ease, background 0.3s ease;
+}
+
+.voiceBoxRecording {
+  composes: voiceBox;
+  border-color: rgba(251, 113, 133, 0.4);
+  background: rgba(251, 113, 133, 0.04);
+}
+
+.recordBtn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.recordBtnIdle {
+  composes: recordBtn;
+  background: linear-gradient(135deg, #4f8ef7, #7c5cf7);
+  box-shadow: 0 8px 30px rgba(79, 142, 247, 0.4);
+}
+
+.recordBtnIdle:hover {
+  box-shadow: 0 0 40px rgba(79, 142, 247, 0.5), 0 8px 30px rgba(79, 142, 247, 0.4);
+}
+
+.recordBtnRecording {
+  composes: recordBtn;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5);
+  animation: recPulse 1.5s ease-in-out infinite;
+}
+
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 40px;
+}
+
+.waveBar {
+  width: 4px;
+  border-radius: 2px;
+  background: #4f8ef7;
+  animation: wave 1s ease-in-out infinite;
+}
+
+/* ── AI Processing ────────────────────────────────────── */
+.processingWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.processingInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+  text-align: center;
+}
+
+.aiOrb {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4f8ef7, #7c5cf7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  animation: orbPulse 2s ease-in-out infinite;
+  position: relative;
+}
+
+.aiOrb::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(79, 142, 247, 0.3);
+  animation: orbRing 2s ease-in-out infinite;
+}
+
+.stepRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 14px;
+  color: rgba(232, 234, 240, 0.68);
+  animation: fadeIn 0.5s ease both;
+}
+
+/* ── Solution cards ───────────────────────────────────── */
+.solutionCard {
+  padding: 16px 20px;
+  border-radius: 12px;
+  border-left: 3px solid;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.solP1 { border-color: #fb7185; }
+.solP2 { border-color: #fbbf24; }
+.solP3 { border-color: #5eead4; }
+
+/* ── Animations ───────────────────────────────────────── */
+@keyframes recPulse {
+  0%, 100% { box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5); transform: scale(1); }
+  50% { box-shadow: 0 8px 50px rgba(239, 68, 68, 0.8); transform: scale(1.05); }
+}
+
+@keyframes wave {
+  0%, 100% { height: 8px; }
+  50% { height: 36px; }
+}
+
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(79, 142, 247, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(124, 92, 247, 0.6); }
+}
+
+@keyframes orbRing {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,117 @@
+name: Security pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Static Analysis & Dependency Audit ───────────────────────────────────────
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Python backend
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Bandit SAST scan
+        run: |
+          pip install bandit
+          bandit -r backend/ -ll -x backend/venv,backend/tests \
+            -f json -o bandit-report.json || true
+
+      - name: Safety dependency check
+        run: |
+          pip install safety
+          safety check -r backend/requirements.txt --output json \
+            > safety-report.json || true
+
+      - name: Semgrep scan (OSS, no token required)
+        run: |
+          pip install semgrep
+          semgrep scan \
+            --config=p/python \
+            --config=p/owasp-top-ten \
+            --error \
+            --exclude=backend/venv \
+            --exclude=frontend/node_modules \
+            backend/ || true
+
+      # Node frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: npm audit
+        run: cd frontend && npm ci && npm audit --audit-level=high || true
+
+      - name: Frontend build check
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+        run: cd frontend && npm run build
+
+  # ── Container Vulnerability Scanning ─────────────────────────────────────────
+  container-scan:
+    runs-on: ubuntu-latest
+    needs: static-analysis
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t prayaas-backend:${{ github.sha }} ./backend
+
+      - name: Trivy container scan
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: prayaas-backend:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: 0          # warn-only — don't block on OS-level CVEs
+          format: table
+
+  # ── Secrets Detection ────────────────────────────────────────────────────────
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog secrets detection
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          # On first push (or any push where before == 0000…) scan everything.
+          # On subsequent pushes, scan only the new commits.
+          base: ${{ github.event.before != '0000000000000000000000000000000000000000' && github.event.before || '' }}
+          head: HEAD
+          extra_args: --only-verified
+
+  # ── Deploy (on main only) ───────────────────────────────────────────────────
+  deploy:
+    needs: [static-analysis, secrets-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build images
+        run: |
+          echo "Build and push to container registry"
+          # docker build -t registry/prayaas-backend:${{ github.sha }} ./backend
+          # docker push registry/prayaas-backend:${{ github.sha }}
+
+      - name: Deploy to production
+        run: |
+          echo "Deploy to production cluster"
+          # kubectl set image deployment/prayaas-backend backend=prayaas-backend:${{ github.sha }}

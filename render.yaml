@@ -1,0 +1,40 @@
+services:
+  # ── FastAPI Backend ──────────────────────────────────────────────────────────
+  - type: web
+    name: prayaas-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: prayaas-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: prayaas-redis
+          property: connectionString
+      - key: GOOGLE_API_KEY
+        sync: false   # set manually in Render dashboard
+      - key: CORS_ORIGINS
+        value: https://prayaas-jatin.vercel.app
+      - key: PORT
+        value: "8000"
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  - type: redis
+    name: prayaas-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+
+databases:
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  - name: prayaas-db
+    plan: free
+    databaseName: prayaas
+    user: prayaas_app

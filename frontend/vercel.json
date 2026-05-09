@@ -1,0 +1,17 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm ci",
+  "env": {
+    "NEXT_PUBLIC_APP_NAME": "Prayaas"
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "index, follow" }
+      ]
+    }
+  ]
+}

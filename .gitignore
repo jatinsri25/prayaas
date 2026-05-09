@@ -1,0 +1,49 @@
+# ── Environment ──────────────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.Python
+backend/venv/
+backend/.venv/
+backend/*.db
+backend/*.db-journal
+backend/*.db-shm
+backend/*.db-wal
+backend/*.db.bak
+backend/uploads/
+backend/backend.log
+backend/uvicorn.log
+backend/token.json
+backend/token.txt
+
+# ── Node / Next.js ───────────────────────────────────────────────────────────
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/.npm
+frontend/.env.local
+
+# ── Docker ───────────────────────────────────────────────────────────────────
+*.log
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ──────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+
+# ── Secrets ──────────────────────────────────────────────────────────────────
+private.pem
+public.pem
+cookies.txt
+token.txt
