@@ -26,6 +26,10 @@ _DEV_COLUMNS: list[tuple[str, str, str]] = [
     ("problems", "confidence_score", "FLOAT"),
     ("problems", "was_escalated", "BOOLEAN DEFAULT 0"),
     ("problems", "last_model_used", "VARCHAR(80)"),
+    ("problems", "description_en", "TEXT"),
+    ("problems", "description_hi", "TEXT"),
+    ("problems", "input_language", "VARCHAR(5) DEFAULT 'en'"),
+    ("problems", "drafting_mode", "VARCHAR(10) DEFAULT 'ai'"),
 ]
 
 

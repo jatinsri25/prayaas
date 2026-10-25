@@ -20,8 +20,9 @@ def _get_redis():
         import redis
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
         try:
-            _redis_client = redis.from_url(redis_url, decode_responses=True)
-            _redis_client.ping()
+            candidate = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=1, socket_timeout=1)
+            candidate.ping()
+            _redis_client = candidate
         except Exception:
             # Redis not available — lockout disabled (dev mode)
             _redis_client = None

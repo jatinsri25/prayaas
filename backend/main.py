@@ -40,6 +40,7 @@ from routers.groups import router as groups_router
 from routers.problems import router as problems_router
 from routers.admin import router as admin_router
 from routers.knowledge import router as knowledge_router
+from routers.insights import router as insights_router
 from middleware.csrf import CSRFMiddleware
 from utils.logger import get_logger
 from metrics import get_metrics_response, http_requests_total
@@ -146,6 +147,7 @@ app.include_router(groups_router)
 app.include_router(problems_router)
 app.include_router(admin_router)
 app.include_router(knowledge_router)
+app.include_router(insights_router)
 
 
 # ── Root & Health ─────────────────────────────────────────────────────────────

@@ -1,0 +1,26 @@
+.switch {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid #c4d3b144;
+  border-radius: 5px;
+}
+.switch button {
+  background: none;
+  border: 0;
+  border-radius: 3px;
+  color: #c0cbbd;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.switch button[aria-pressed="true"] {
+  color: #243d32;
+  background: #c4d3b1;
+}
+.switch button:focus-visible {
+  outline: 2px solid #f2efe4;
+  outline-offset: 3px;
+}

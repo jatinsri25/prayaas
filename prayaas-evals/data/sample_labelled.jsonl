@@ -1,0 +1,15 @@
+# Format sample only. Replace with 50-100+ real complaints that YOU labelled by hand.
+{"id": "r1", "text": "Water has been leaking from the pipe near Wing B gate for two days, the road is flooded", "category": "water", "severity": "high", "duplicate_of": null}
+{"id": "r2", "text": "Streetlight near parking lot not working, it's very dark at night", "category": "electricity", "severity": "medium", "duplicate_of": null}
+{"id": "r3", "text": "Pipe leaking at Wing B entrance, lot of water on the road since Monday", "category": "water", "severity": "high", "duplicate_of": "r1"}
+{"id": "r4", "text": "Lift in Wing D is stuck again, senior citizens cannot reach upper floors", "category": "lift", "severity": "high", "duplicate_of": null}
+{"id": "r5", "text": "Main gate security guard was sleeping at 2 AM and a visitor walked in without entry", "category": "security", "severity": "high", "duplicate_of": null}
+{"id": "r6", "text": "Garbage is not being collected from Wing A for four days, bad smell", "category": "waste", "severity": "medium", "duplicate_of": null}
+{"id": "r7", "text": "Outsiders parking cars in resident slots near block C every evening", "category": "parking", "severity": "low", "duplicate_of": null}
+{"id": "r8", "text": "Wing D lift is not working, people are stuck, please fix", "category": "lift", "severity": "high", "duplicate_of": "r4"}
+{"id": "r9", "text": "Bijli ka pole sparking near children's play area, very dangerous", "category": "electricity", "severity": "critical", "duplicate_of": null}
+{"id": "r10", "text": "Kachra uthaya nahi gaya Wing A mein char din se", "category": "waste", "severity": "medium", "duplicate_of": "r6"}
+{"id": "r11", "text": "CCTV camera at basement entry is off since last week", "category": "security", "severity": "medium", "duplicate_of": null}
+{"id": "r12", "text": "Low water pressure on 5th floor in the mornings", "category": "water", "severity": "low", "duplicate_of": null}
+{"id": "r13", "text": "Visitor parking is always full because residents park there", "category": "parking", "severity": "low", "duplicate_of": null}
+{"id": "r14", "text": "Power cut every evening between 7 and 8 in Wing C", "category": "electricity", "severity": "medium", "duplicate_of": null}

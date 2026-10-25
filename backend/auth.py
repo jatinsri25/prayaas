@@ -101,8 +101,10 @@ def _get_redis():
         try:
             import redis
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-            _redis_client = redis.from_url(redis_url, decode_responses=True)
-            _redis_client.ping()
+            candidate = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=1, socket_timeout=1)
+            candidate.ping()
+            # Don't expose an unverified client to concurrent authentication requests.
+            _redis_client = candidate
         except Exception:
             _redis_client = None
     return _redis_client

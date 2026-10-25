@@ -106,6 +106,10 @@ class Problem(Base):
     title = Column(String(200), nullable=False)
     raw_input = Column(Text, nullable=True)
     formatted_description = Column(Text, nullable=False)
+    description_en = Column(Text, nullable=True)
+    description_hi = Column(Text, nullable=True)
+    input_language = Column(String(5), default="en")
+    drafting_mode = Column(String(10), default="ai")
     category = Column(String(50), default="Other")
     severity = Column(String(20), default="Medium")
     location = Column(String(200), nullable=True)
@@ -292,3 +296,43 @@ class KnowledgeChunk(Base):
     chunk_text = Column(Text, nullable=False)
     embedding_json = Column(Text, nullable=False)     # JSON-encoded list[float]
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class StructuredCache(Base):
+    """User-scoped, expiring responses; a lease coalesces concurrent requests."""
+    __tablename__ = "structured_cache"
+    key = Column(String(64), primary_key=True)
+    owner = Column(String(36), nullable=False)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    result_json = Column(Text, nullable=True)
+
+
+class AICallBudget(Base):
+    """Atomic per-day call reservations, independent of optional Redis."""
+    __tablename__ = "ai_call_budgets"
+    key = Column(String(80), primary_key=True)
+    calls = Column(Integer, nullable=False, default=0)
+    blocked_until = Column(DateTime, nullable=True)
+
+
+class AIProviderState(Base):
+    """Short-lived failure category, scoped to a credential/model fingerprint."""
+    __tablename__ = "ai_provider_state"
+    key = Column(String(64), primary_key=True)
+    error_code = Column(String(32), nullable=False)
+    retry_at = Column(DateTime, nullable=False)
+
+
+class WeeklyDigest(Base):
+    """One private committee draft per completed week in this deployment."""
+    __tablename__ = "weekly_digests"
+    week_start = Column(String(10), primary_key=True)
+    snapshot_json = Column(Text, nullable=False)
+    summary_en = Column(Text, nullable=False)
+    summary_hi = Column(Text, nullable=False)
+    source_ids_json = Column(Text, nullable=False, default="[]")
+    generation_mode = Column(String(20), nullable=False)
+    model_used = Column(String(80), nullable=True)
+    revision = Column(Integer, nullable=False, default=1)
+    edited_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), nullable=False)

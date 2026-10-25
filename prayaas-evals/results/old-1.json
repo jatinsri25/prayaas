@@ -1,0 +1,35 @@
+{
+  "label": "old-1",
+  "when": "2026-10-21T08:12:38+00:00",
+  "python": "3.9.6",
+  "adapter_mode": "real",
+  "scope": "text pipeline only; isolated empty DB; excludes HTTP, audio and duplicate checking",
+  "backend_path": "/Users/jatinsrivastava/.codex/worktrees/pipeline-baseline/Prayaas/backend",
+  "source_sha256": "8d3ebfd48cba71b3221997ec9ab9ad52fd42d0039a5d6c3cf85a5f5787443a46",
+  "dataset_sha256": "ace1ed5d10d6a267df950550137bb5d4dd06631a38a5f817aef0a187c8b36c5a",
+  "warmup": 2,
+  "wall_s": 85.295,
+  "runs": 40,
+  "ok": 5,
+  "error_rate": 0.875,
+  "concurrency": 4,
+  "p50_s": 4.172,
+  "p95_s": 4.91,
+  "mean_s": 4.166,
+  "throughput_rps": 0.059,
+  "usage_coverage": 1.0,
+  "tokens_per_report": 1275.8,
+  "cost_per_report_usd": null,
+  "price_in_per_million": null,
+  "price_out_per_million": null,
+  "models": [
+    "gemini-2.5-flash-lite"
+  ],
+  "error_examples": [
+    "ValueError('Pipeline returned a failed/fallback draft, not a valid AI result')",
+    "ValueError('Pipeline returned a failed/fallback draft, not a valid AI result')",
+    "ValueError('Pipeline returned a failed/fallback draft, not a valid AI result')"
+  ],
+  "loop_stall_max_ms": 85285.6,
+  "loop_stall_p99_ms": 85285.6
+}

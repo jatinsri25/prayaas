@@ -9,10 +9,19 @@
 - 🔁 **ML Feedback Loop** — Admin corrections to AI fields are logged, retrieved as nearest-neighbor few-shot examples on the next inference, and aggregated into weekly per-model trust scores
 - 🗺️ **Semantic Dedup with Geofencing** — Two-stage filter (haversine distance + cosine similarity over `gemini-embedding-001`) blocks duplicate reports before they're filed
 - 📖 **RAG over LMC Bylaws** — Ask civic questions and get answers grounded in cited Lucknow Municipal Corporation + U.P. Apartment Act sources at `/knowledge`
-- 🤖 **LangChain AI Agent** — Gemini 2.5/2.0 Flash family formats problems + generates 3 prioritised solutions
+- **Structured AI Drafts** - One Gemini call formats reports and generates 3 validated solutions, with configurable model fallback.
 - 👥 **Society Groups** — Create and join groups for wings/blocks
 - 📋 **AI Drafts** — Review and edit AI-formatted reports before posting
 - 🗳️ **Upvoting & Status** — Community voting and issue tracking
+
+## Pipeline Evaluation
+
+The report flow uses one validated structured-generation call, streams actual
+progress stages, and keeps blocking SDK work off the async event loop. See
+[the evaluation guide](prayaas-evals/README.md) and
+[current validation results](prayaas-evals/RESULTS.md). Live performance claims
+remain unverified because the current Gemini free-tier quota was exhausted;
+real quality metrics require independently labelled complaints.
 
 ## Security Features (Production)
 
@@ -39,6 +48,21 @@
 | Infrastructure | Docker + Nginx + GitHub Actions |
 
 ## Setup & Running
+
+### Start Both Services Locally
+
+After installing the dependencies below, run this from the repository root:
+
+```bash
+node scripts/dev.mjs
+```
+
+This starts FastAPI on port 8000, waits for its health check, and starts Next.js
+on port 3000. Open http://127.0.0.1:3000. Press Ctrl+C to stop both services.
+The launcher reports occupied ports instead of starting duplicate servers.
+Local API requests use the Next.js proxy; keep `NEXT_PUBLIC_API_URL` blank in
+`frontend/.env.local`. Development uses `.next-dev`, so production builds do not
+overwrite the running preview's JavaScript files.
 
 ### Prerequisites
 - Python 3.10+
@@ -103,38 +127,28 @@ docker compose -f docker-compose.prod.yml up -d
 
 ## AI Pipeline
 
+```text
+Text / optional voice transcription
+  -> Injection guard + PII masking
+  -> Cached structured generation + durable call budget
+  -> English/Hindi descriptions, metadata, and suggested actions in one response
+  -> Safety checks + optional semantic duplicate lookup
+  -> Original text and editable bilingual draft
+  -> Resident reviews and posts
+
+Manual path: text -> resident review -> post (no AI calls)
+Search: natural language -> validated filters -> permission-scoped ORM query
+Weekly digest: completed-week snapshot -> editable bilingual committee draft
 ```
-User Input (voice/text)
-        ↓
-  [Gemini Audio]                    ← voice transcription (if audio)
-        ↓
-  [Injection Guard]                 ← prompt injection detection
-        ↓
-  [PII Redaction]                   ← Aadhaar, phone, email stripped
-        ↓
-  [Token Budget]                    ← per-user daily limit check
-        ↓
-  [Confidence-Gated format_problem]
-   ├─ Try gemini-2.5-flash-lite
-   ├─ Score JSON validity + schema completeness + uncertainty markers
-   └─ If score < 0.78 → escalate to next model in chain
-        ↓
-  [Severity auto-escalation]        ← distress keywords bump to High/Critical
-        ↓
-  [Confidence-Gated suggest_solutions]
-        ↓
-  [AutoResolutionEvent persisted]   ← powers the 94% auto-resolution metric
-        ↓
-  [Embedding stored on Problem]     ← for future semantic dedup queries
-        ↓
-  Draft shown to user with confidence badge
-        ↓
-  [Dedup check]                     ← haversine + cosine similarity
-        ↓
-  Edit → Post to community
-        ↓
-  [Admin correction → AICorrection] ← becomes few-shot context next time
-```
+
+One normal report-generation call includes both languages; invalid schemas can
+trigger one retry. Voice transcription and optional embedding operations are
+separate calls. Confidence scores are heuristics, not measured accuracy, and no
+AI result automatically resolves a community issue.
+
+See [AI features and operations](docs/ai-features.md) for quota controls, privacy
+limits, APIs, migration, weekly scheduler setup, and regression tests. The digest
+job is implemented but a host schedule must be configured separately.
 
 ## Project Structure
 

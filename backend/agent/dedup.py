@@ -47,6 +47,7 @@ def find_duplicates(
     similarity_threshold: float = DEFAULT_SIM_THRESHOLD,
     top_k: int = DEFAULT_TOP_K,
     exclude_problem_id: Optional[int] = None,
+    viewer: Optional[models.User] = None,
 ) -> List[dict]:
     """
     Returns up to `top_k` duplicate candidates as plain dicts ready to
@@ -55,9 +56,9 @@ def find_duplicates(
     Geofencing is OPTIONAL — if no lat/lng provided we skip Stage 1 and
     rely entirely on semantic similarity (still useful, just less precise).
     """
-    query_embedding = embed_text(raw_text)
-
-    candidates_query = db.query(models.Problem).filter(
+    from utils.problem_access import visible_problems
+    base_query = visible_problems(db, viewer) if viewer is not None else db.query(models.Problem)
+    candidates_query = base_query.filter(
         models.Problem.embedding_json.isnot(None),
         models.Problem.status.in_(["Open", "In Progress"]),
     )
@@ -68,6 +69,10 @@ def find_duplicates(
     # In PostgreSQL + pgvector this becomes:
     #   ORDER BY embedding <=> :query_emb LIMIT 50
     candidates = candidates_query.order_by(models.Problem.created_at.desc()).limit(200).all()
+
+    if not candidates:
+        return []
+    query_embedding = embed_text(raw_text)
 
     matches: List[dict] = []
     for candidate in candidates:

@@ -1,0 +1,33 @@
+{
+  "label": "new-1",
+  "when": "2026-10-21T08:12:51+00:00",
+  "python": "3.9.6",
+  "adapter_mode": "real",
+  "scope": "text pipeline only; isolated empty DB; excludes HTTP, audio and duplicate checking",
+  "backend_path": "/Users/jatinsrivastava/Downloads/Prayaas/backend",
+  "source_sha256": "bd7faa472963655daa6bf0bf7d8beeabeab9a3597c90ed05f95bd1cb4b1b780e",
+  "dataset_sha256": "ace1ed5d10d6a267df950550137bb5d4dd06631a38a5f817aef0a187c8b36c5a",
+  "warmup": 2,
+  "wall_s": 9.459,
+  "runs": 40,
+  "ok": 0,
+  "error_rate": 1.0,
+  "concurrency": 4,
+  "p50_s": null,
+  "p95_s": null,
+  "mean_s": null,
+  "throughput_rps": 0.0,
+  "usage_coverage": 0,
+  "tokens_per_report": null,
+  "cost_per_report_usd": null,
+  "price_in_per_million": null,
+  "price_out_per_million": null,
+  "models": [],
+  "error_examples": [
+    "HTTPException(status_code=503, detail='AI could not create a complete draft right now. Your input is safe; please try again.')",
+    "HTTPException(status_code=503, detail='AI could not create a complete draft right now. Your input is safe; please try again.')",
+    "HTTPException(status_code=503, detail='AI could not create a complete draft right now. Your input is safe; please try again.')"
+  ],
+  "loop_stall_max_ms": 36.6,
+  "loop_stall_p99_ms": 4.3
+}

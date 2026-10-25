@@ -30,6 +30,7 @@ import os
 import re
 import time
 from dataclasses import dataclass, field
+from threading import Event
 from typing import Any, Callable, Dict, List, Optional
 
 from google.genai import Client as GenaiClient
@@ -39,11 +40,11 @@ _client = GenaiClient(api_key=GOOGLE_API_KEY) if GOOGLE_API_KEY else None
 
 # ── Model escalation chain ───────────────────────────────────────────────────
 # Cheapest → most capable. We escalate on low confidence, not just on quota.
-MODEL_CHAIN: List[str] = [
-    "gemini-2.5-flash-lite",
-    "gemini-2.0-flash-lite",
-    "gemini-2.0-flash",
-]
+MODEL_CHAIN: List[str] = [name.strip() for name in os.getenv(
+    "PRAYAAS_MODEL_CHAIN", "gemini-3.5-flash-lite,gemini-3.8-flash"
+).split(",") if name.strip()]
+if not MODEL_CHAIN:
+    raise ValueError("PRAYAAS_MODEL_CHAIN must contain at least one model")
 
 # A response with confidence at or above this is auto-resolved (no human review).
 AUTO_RESOLVE_THRESHOLD: float = float(os.getenv("PRAYAAS_AUTO_RESOLVE_THRESHOLD", "0.78"))
@@ -72,6 +73,9 @@ class GateResult:
     auto_resolved: bool
     errors: List[str] = field(default_factory=list)
     elapsed_ms: int = 0
+    usage: Optional[Dict[str, int]] = None
+    usage_by_model: List[Dict[str, Any]] = field(default_factory=list)
+    cache_hit: bool = False
 
     def to_log_meta(self) -> Dict[str, Any]:
         return {
@@ -163,16 +167,37 @@ def compute_confidence(
 
 # ── Core gated call ──────────────────────────────────────────────────────────
 
-def _raw_call(model: str, prompt: str, temperature: float) -> str:
+def _raw_call(
+    model: str, prompt: str, temperature: float,
+    *, timeout_ms: int = 20000, response_schema: Optional[type] = None,
+    max_output_tokens: int = 3200,
+) -> tuple[str, Optional[Dict[str, int]]]:
     """Single Gemini call. Raises on hard errors."""
     if _client is None:
-        raise RuntimeError("GOOGLE_API_KEY not configured")
+        from fastapi import HTTPException
+        from agent.availability import MESSAGES
+        raise HTTPException(503, MESSAGES["unconfigured"])
+    config = {
+        "temperature": temperature,
+        "response_mime_type": "application/json",
+        # The gate owns retries; SDK retries must not multiply the latency.
+        "http_options": {"timeout": timeout_ms, "retry_options": {"attempts": 1}},
+    }
+    if response_schema is not None:
+        config.update(response_json_schema=response_schema.model_json_schema(), max_output_tokens=max_output_tokens)
     response = _client.models.generate_content(
         model=model,
         contents=prompt,
-        config={"temperature": temperature},
+        config=config,
     )
-    return (response.text or "").strip()
+    meta = response.usage_metadata
+    usage = None
+    if meta is not None and meta.prompt_token_count is not None and meta.candidates_token_count is not None:
+        usage = {
+            "prompt_tokens": meta.prompt_token_count,
+            "completion_tokens": meta.candidates_token_count + (meta.thoughts_token_count or 0),
+        }
+    return (response.text or "").strip(), usage
 
 
 def gated_call(
@@ -184,6 +209,11 @@ def gated_call(
     threshold: float = AUTO_RESOLVE_THRESHOLD,
     on_event: Optional[Callable[[GateResult, str], None]] = None,
     user_id: Optional[int] = None,
+    response_schema: Optional[type] = None,
+    validate: Optional[Callable[[Any], Any]] = None,
+    on_attempt: Optional[Callable[[int], None]] = None,
+    cancelled: Optional[Event] = None,
+    timeout_seconds: float = 40,
 ) -> GateResult:
     """
     Run `prompt` through the model chain, escalating on low confidence.
@@ -199,42 +229,50 @@ def gated_call(
                           Used to persist AutoResolutionEvent rows.
         user_id:          For audit logging.
     """
-    start = time.time()
+    start = time.monotonic()
     last: GateResult | None = None
     errors: List[str] = []
+    attempts = 0
+    usage_complete = True
+    usage_by_model = []
 
     for index, model in enumerate(MODEL_CHAIN):
+        remaining = timeout_seconds - (time.monotonic() - start)
+        # Gemini rejects a server deadline below ten seconds.
+        if remaining < 10 or (cancelled is not None and cancelled.is_set()):
+            break
+        attempts += 1
+        if on_attempt:
+            on_attempt(index)
         try:
-            text = _raw_call(model, prompt, temperature)
-        except Exception as exc:
-            err = f"{model}:{type(exc).__name__}:{str(exc)[:120]}"
-            errors.append(err)
-            # Escalate on quota/availability errors
-            if any(s in str(exc) for s in ("429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE")):
-                continue
-            # Hard errors abort the chain
-            elapsed = int((time.time() - start) * 1000)
-            failed = GateResult(
-                text="",
-                parsed=None,
-                model_used=model,
-                confidence=0.0,
-                escalations=index,
-                auto_resolved=False,
-                errors=errors,
-                elapsed_ms=elapsed,
+            text, usage = _raw_call(
+                model, prompt, temperature,
+                timeout_ms=max(1, int(min(20, remaining) * 1000)),
+                response_schema=response_schema,
             )
-            if on_event:
-                try:
-                    on_event(failed, task_type)
-                except Exception:
-                    pass
-            return failed
+            if usage is None:
+                usage_complete = False
+            else:
+                usage_by_model.append({"model": model, **usage})
+        except Exception as exc:
+            usage_complete = False
+            errors.append(f"{model}:{type(exc).__name__}:{getattr(exc, 'code', '')}")
+            # Escalate on quota/availability errors
+            if any(s in str(exc) for s in ("429", "503", "404", "RESOURCE_EXHAUSTED", "UNAVAILABLE")) or isinstance(exc, TimeoutError) or "timeout" in type(exc).__name__.lower():
+                continue
+            break
 
         json_score, parsed = _score_json_validity(text)
         confidence = compute_confidence(text, parsed, json_score, required_fields)
+        if validate is not None:
+            try:
+                parsed = validate(parsed)
+            except (ValueError, TypeError):
+                parsed = None
+                confidence = 0.0
+                errors.append(f"{model}:InvalidSchema")
 
-        last = GateResult(
+        candidate = GateResult(
             text=text,
             parsed=parsed,
             model_used=model,
@@ -242,8 +280,10 @@ def gated_call(
             escalations=index,
             auto_resolved=confidence >= threshold,
             errors=list(errors),
-            elapsed_ms=int((time.time() - start) * 1000),
+            elapsed_ms=int((time.monotonic() - start) * 1000),
         )
+        if last is None or candidate.confidence > last.confidence:
+            last = candidate
 
         if confidence >= threshold:
             break  # auto-resolved — no escalation needed
@@ -254,13 +294,23 @@ def gated_call(
         last = GateResult(
             text="",
             parsed=None,
-            model_used=MODEL_CHAIN[-1],
+            model_used=MODEL_CHAIN[max(0, attempts - 1)],
             confidence=0.0,
-            escalations=len(MODEL_CHAIN) - 1,
+            escalations=max(0, attempts - 1),
             auto_resolved=False,
             errors=errors,
-            elapsed_ms=int((time.time() - start) * 1000),
+            elapsed_ms=int((time.monotonic() - start) * 1000),
         )
+
+    last.errors = errors
+    last.escalations = max(0, attempts - 1)
+    last.elapsed_ms = int((time.monotonic() - start) * 1000)
+    last.usage_by_model = usage_by_model
+    if usage_complete and usage_by_model:
+        last.usage = {
+            key: sum(item[key] for item in usage_by_model)
+            for key in ("prompt_tokens", "completion_tokens")
+        }
 
     if on_event:
         try:

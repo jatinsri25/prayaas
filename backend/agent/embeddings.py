@@ -39,7 +39,10 @@ def _get_client() -> GenaiClient | None:
     if not _GOOGLE_API_KEY:
         return None
     if _client is None:
-        _client = GenaiClient(api_key=_GOOGLE_API_KEY)
+        _client = GenaiClient(
+            api_key=_GOOGLE_API_KEY,
+            http_options={"timeout": 10000, "retry_options": {"attempts": 1}},
+        )
     return _client
 
 
@@ -84,7 +87,6 @@ def _embed_cached(text_normalized: str) -> tuple:
                 "embedding_call_failed",
                 model=EMBEDDING_MODEL,
                 error_type=type(exc).__name__,
-                error=str(exc)[:160],
             )
         except Exception:
             pass

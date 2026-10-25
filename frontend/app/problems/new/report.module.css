@@ -5,9 +5,11 @@
   gap: 20px;
   padding: 32px;
   border: 2px dashed rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
+  border-radius: 5px;
   background: rgba(255, 255, 255, 0.02);
-  transition: border-color 0.3s ease, background 0.3s ease;
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease;
 }
 
 .voiceBoxRecording {
@@ -26,17 +28,20 @@
   align-items: center;
   justify-content: center;
   font-size: 2rem;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .recordBtnIdle {
   composes: recordBtn;
-  background: linear-gradient(135deg, #4f8ef7, #7c5cf7);
-  box-shadow: 0 8px 30px rgba(79, 142, 247, 0.4);
+  background: #c4d3b1;
+  box-shadow: none;
 }
 
 .recordBtnIdle:hover {
-  box-shadow: 0 0 40px rgba(79, 142, 247, 0.5), 0 8px 30px rgba(79, 142, 247, 0.4);
+  background: #d8e2c9;
+  transform: translateY(-2px);
 }
 
 .recordBtnRecording {
@@ -56,7 +61,7 @@
 .waveBar {
   width: 4px;
   border-radius: 2px;
-  background: #4f8ef7;
+  background: #c4d3b1;
   animation: wave 1s ease-in-out infinite;
 }
 
@@ -65,7 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  min-height: calc(100svh - 88px);
 }
 
 .processingInner {
@@ -73,7 +78,8 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  padding: 40px;
+  padding: 48px 24px;
+  width: min(100%, 600px);
   text-align: center;
 }
 
@@ -81,7 +87,8 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4f8ef7, #7c5cf7);
+  background: #c4d3b1;
+  color: #243d32;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -91,11 +98,11 @@
 }
 
 .aiOrb::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  border: 2px solid rgba(79, 142, 247, 0.3);
+  border: 1px solid rgba(196, 211, 177, 0.3);
   animation: orbRing 2s ease-in-out infinite;
 }
 
@@ -105,47 +112,428 @@
   gap: 10px;
   padding: 12px 16px;
   border: 0.5px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.04);
   font-size: 14px;
   color: rgba(232, 234, 240, 0.68);
   animation: fadeIn 0.5s ease both;
 }
 
-/* ── Solution cards ───────────────────────────────────── */
-.solutionCard {
-  padding: 16px 20px;
-  border-radius: 12px;
-  border-left: 3px solid;
-  background: rgba(255, 255, 255, 0.035);
+.pipelineSteps {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 390px;
+  margin-top: 10px;
+  text-align: left;
 }
 
-.solP1 { border-color: #fb7185; }
-.solP2 { border-color: #fbbf24; }
-.solP3 { border-color: #5eead4; }
+.stepActive {
+  border-color: rgba(196, 211, 177, 0.4);
+  background: rgba(196, 211, 177, 0.08);
+  color: #e8eaf0;
+}
+
+.stepNumber {
+  color: #c4d3b1;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  min-width: 18px;
+}
+
+.orbMark {
+  font-size: 32px;
+  font-weight: 500;
+}
+.progressNote {
+  color: rgba(232, 234, 240, 0.7);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.elapsed {
+  color: rgba(232, 234, 240, 0.5);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.draftFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.reviewHeader {
+  padding-bottom: 28px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+.reviewToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.reviewKicker {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.reviewHeader h1 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: clamp(36px, 5vw, 50px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  margin: 0;
+}
+.reviewIntro {
+  max-width: 520px;
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--soft);
+}
+.reviewAttribution {
+  margin: 24px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.reviewPanel {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #f2efe404;
+}
+.reviewSectionTitle {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+  margin: 0 0 14px;
+}
+.nextSteps {
+  padding-top: 20px;
+}
+.actionList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.actionItem {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 14px;
+  padding: 22px 0;
+  border-top: 1px solid var(--border);
+}
+.actionNumber {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 23px;
+  line-height: 1.4;
+  color: var(--blue);
+}
+.actionText {
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.actionDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 32px;
+  margin: 14px 0 0;
+}
+.actionDetails div {
+  min-width: 0;
+}
+.actionDetails dt {
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 5px;
+}
+.actionDetails dd {
+  margin: 0;
+  color: var(--soft);
+  font-size: 12px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.sharePanel {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.shareActions {
+  display: flex;
+  gap: 12px;
+}
+.shareActions > button:last-child {
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .reviewToolbar {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .reviewKicker {
+    max-width: 140px;
+    line-height: 1.8;
+  }
+  .reviewPanel {
+    padding: 18px;
+  }
+  .shareActions {
+    flex-direction: column;
+  }
+}
+.languageRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 24px;
+}
+.languageHelp {
+  color: #bcc6bb;
+  font-size: 12px;
+  line-height: 1.8;
+  margin-bottom: 18px;
+}
+.availability {
+  padding: 18px 22px;
+  border-left: 2px solid #a9c49c;
+  background: #c4d3b10a;
+  margin-bottom: 26px;
+}
+.availability p,
+.starters p,
+.notebook p {
+  font-size: 13px;
+  line-height: 1.75;
+  color: #c8d1c4;
+  margin: 10px 0;
+}
+.availability small,
+.notebook small {
+  font-size: 11px;
+  color: #a9b6a5;
+  line-height: 1.7;
+  display: block;
+}
+.notebookHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.notebookHeading > span:last-child {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: #a9b6a5;
+}
+.starters {
+  margin-bottom: 24px;
+}
+.starterGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+.starterGrid button {
+  padding: 14px 10px;
+  border: 1px solid #c4d3b125;
+  border-radius: 4px;
+  color: #c8d1c4;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+.starterGrid button:hover,
+.starterGrid button[aria-pressed="true"] {
+  background: #c4d3b114;
+  border-color: #c4d3b18a;
+  color: #f2efe4;
+}
+.starterGrid button:focus-visible,
+.voiceDetails summary:focus-visible {
+  outline: 2px solid #c4d3b1;
+  outline-offset: 3px;
+}
+.voiceDetails {
+  margin-bottom: 16px;
+  border: 1px solid #c4d3b125;
+  border-radius: 4px;
+}
+.voiceDetails summary {
+  padding: 16px 22px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #c4d3b1;
+}
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0;
+}
+.detailsGrid > div {
+  min-width: 0;
+}
+.inputFootnote {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 11px;
+  color: #a9b6a5;
+  margin-top: 16px;
+  line-height: 1.6;
+}
+.inputFootnote span:last-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.notebook {
+  padding: 24px 0 0;
+  margin-top: 28px;
+  border-top: 1px solid #c4d3b125;
+}
+.saveConsent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #c8d1c4;
+  font-size: 12px;
+  line-height: 1.7;
+  cursor: pointer;
+}
+.saveConsent input {
+  margin-top: 3px;
+  accent-color: #c4d3b1;
+  width: 16px;
+  height: 16px;
+}
+.notebookActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+@media (max-width: 640px) {
+  .starterGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.bilingualFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.bilingualFields > div {
+  min-width: 0;
+}
+.originalNote {
+  padding: 20px 22px;
+  border-left: 2px solid #c4d3b1;
+  background: #c4d3b10a;
+}
+.originalNote h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.originalNote p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #f2efe4;
+}
+.originalNote small {
+  display: block;
+  color: #a8b8a6;
+  font-size: 11px;
+  line-height: 1.8;
+  margin-top: 15px;
+}
+@media (max-width: 640px) {
+  .bilingualFields {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aiOrb,
+  .aiOrb::after,
+  .stepRow,
+  .waveBar,
+  .recordBtnRecording {
+    animation: none;
+  }
+}
 
 /* ── Animations ───────────────────────────────────────── */
 @keyframes recPulse {
-  0%, 100% { box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5); transform: scale(1); }
-  50% { box-shadow: 0 8px 50px rgba(239, 68, 68, 0.8); transform: scale(1.05); }
+  0%,
+  100% {
+    box-shadow: 0 8px 30px rgba(239, 68, 68, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 8px 50px rgba(239, 68, 68, 0.8);
+    transform: scale(1.05);
+  }
 }
 
 @keyframes wave {
-  0%, 100% { height: 8px; }
-  50% { height: 36px; }
+  0%,
+  100% {
+    height: 8px;
+  }
+  50% {
+    height: 36px;
+  }
 }
 
 @keyframes orbPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(79, 142, 247, 0.4); }
-  50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(124, 92, 247, 0.6); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
 }
 
 @keyframes orbRing {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.2); opacity: 0; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

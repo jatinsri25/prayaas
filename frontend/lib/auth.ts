@@ -8,13 +8,23 @@
  */
 
 import api from './api';
+import { isAxiosError } from 'axios';
+
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+  flat_number: string;
+  avatar_color: string;
+  role?: string;
+}
 
 // ── In-Memory Token Store ─────────────────────────────────────────────────────
 // Access token lives only in JS memory — cleared on page refresh.
 // On refresh, the app calls /api/auth/refresh with the HttpOnly cookie.
 
 let _accessToken: string | null = null;
-let _user: any = null;
+let _user: AuthUser | null = null;
 let _refreshPromise: Promise<boolean> | null = null;
 
 export function getAccessToken(): string | null {
@@ -25,11 +35,11 @@ export function setAccessToken(token: string | null): void {
   _accessToken = token;
 }
 
-export function getUser(): any {
+export function getUser(): AuthUser | null {
   return _user;
 }
 
-export function setUser(user: any): void {
+export function setUser(user: AuthUser | null): void {
   _user = user;
   // Also store user info (not token) in localStorage for display purposes
   if (typeof window !== 'undefined') {
@@ -41,13 +51,17 @@ export function setUser(user: any): void {
   }
 }
 
-export function loadUserFromStorage(): any {
+export function loadUserFromStorage(): AuthUser | null {
   if (typeof window === 'undefined') return null;
   try {
     const stored = localStorage.getItem('prayaas_user');
     if (stored) {
-      _user = JSON.parse(stored);
-      return _user;
+      const user = JSON.parse(stored);
+      if (typeof user?.id === 'number' && typeof user?.name === 'string' &&
+          typeof user?.email === 'string' && typeof user?.flat_number === 'string') {
+        _user = user;
+        return _user;
+      }
     }
   } catch {
     // ignore parse errors
@@ -62,6 +76,9 @@ export function clearAuth(): void {
     localStorage.removeItem('prayaas_user');
     // Legacy cleanup
     localStorage.removeItem('prayaas_token');
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith('prayaas_report_draft:')) localStorage.removeItem(key);
+    }
   }
 }
 
@@ -90,8 +107,11 @@ export async function refreshAccessToken(): Promise<boolean> {
         return true;
       }
       return false;
-    } catch {
-      clearAuth();
+    } catch (error) {
+      // A temporary outage is not evidence that the resident's session expired.
+      if (isAxiosError(error) && [401, 403].includes(error.response?.status ?? 0)) {
+        clearAuth();
+      }
       return false;
     } finally {
       _refreshPromise = null;
@@ -106,6 +126,7 @@ export async function refreshAccessToken(): Promise<boolean> {
  * Tries to refresh the access token if the user was previously logged in.
  */
 export async function initAuth(): Promise<boolean> {
+  if (_accessToken && _user) return true;
   const storedUser = loadUserFromStorage();
   if (!storedUser) {
     return false;

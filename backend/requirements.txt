@@ -26,6 +26,7 @@ redis==5.0.4
 bleach==6.1.0
 
 # ── AI Pipeline (Gemini) ─────────────────────────────────────────────────────
+google-genai>=1.47.0,<2
 google-generativeai>=0.8.0
 langchain>=0.3.0
 langchain-google-genai>=2.0.0

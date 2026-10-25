@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi, extractError } from '@/lib/api';
+import AuthStory from '@/components/AuthStory';
 import styles from '../auth.module.css';
 
 export default function LoginPage() {
@@ -36,53 +37,14 @@ export default function LoginPage() {
 
   return (
     <main className={styles.authPage}>
-      <section className={styles.visualPanel} aria-label="Prayaas login overview">
-        <Link className={styles.brand} href="/">
-          <span className={styles.brandMark} aria-hidden="true" />
-          <span className={styles.brandText}>
-            <strong>Prayaas</strong>
-            <span>Powered by intelligence</span>
-          </span>
-        </Link>
-
-        <div>
-          <div className={styles.heroCopy}>
-            <span>Resident portal</span>
-            <h1>Welcome back to your society workspace.</h1>
-            <p>
-              Continue tracking resident issues, AI generated solutions, voting momentum and committee progress from
-              one focused dashboard.
-            </p>
-          </div>
-
-          <div className={styles.societyCard}>
-            <div className={styles.metricGrid}>
-              <div className={styles.metric}>
-                <span className={styles.metricLabel}>Open</span>
-                <strong>18</strong>
-                <span>Issues awaiting action</span>
-              </div>
-              <div className={styles.metric}>
-                <span className={styles.metricLabel}>Resolved</span>
-                <strong>148</strong>
-                <span>This month</span>
-              </div>
-              <div className={styles.metric}>
-                <span className={styles.metricLabel}>Votes</span>
-                <strong>2.4k</strong>
-                <span>Resident signals</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <AuthStory />
 
       <section className={styles.formPanel}>
         <div className={styles.formCard}>
           <header className={styles.formHeader}>
-            <span className={styles.formEyebrow}>Sign in</span>
-            <h1>Open dashboard</h1>
-            <p>Use your registered resident email and password to continue.</p>
+            <span className={styles.formEyebrow}>YOUR NEIGHBOURHOOD AWAITS</span>
+            <h1>Welcome back.</h1>
+            <p>Sign in to see what is happening in your society.</p>
           </header>
 
           <form className={styles.form} onSubmit={handleSubmit}>
@@ -114,10 +76,10 @@ export default function LoginPage() {
               />
             </label>
 
-            {error ? <div className={styles.errorBox}>{error}</div> : null}
+            {error ? <div className={styles.errorBox} role="alert">{error}</div> : null}
 
             <button className={styles.submitButton} disabled={loading} id="login-submit" type="submit">
-              {loading ? <span className={styles.spinner} /> : 'Sign in'}
+              {loading ? <span className={styles.spinner} role="status" aria-label="Signing in" /> : 'Sign in'}
             </button>
           </form>
 

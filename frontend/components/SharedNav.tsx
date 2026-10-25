@@ -1,26 +1,21 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api';
-import { loadUserFromStorage } from '@/lib/auth';
+import { loadUserFromStorage, type AuthUser } from '@/lib/auth';
+import BrandMark from './BrandMark';
 import s from './shared.module.css';
 
 interface SharedNavProps {
-  active: 'dashboard' | 'groups' | 'report' | 'admin' | 'knowledge';
-}
-
-function BrandMark() {
-  return (
-    <span className={s.brandMark} aria-hidden="true">
-      <span className={s.brandMarkDots} />
-    </span>
-  );
+  active: 'dashboard' | 'groups' | 'report' | 'admin' | 'knowledge' | 'search' | 'committee';
 }
 
 export default function SharedNav({ active }: SharedNavProps) {
   const router = useRouter();
-  const user = loadUserFromStorage();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  useEffect(() => { setUser(loadUserFromStorage()); }, []);
 
   const logout = async () => {
     await authApi.logout();
@@ -39,6 +34,8 @@ export default function SharedNav({ active }: SharedNavProps) {
         </Link>
 
         <div className={s.navLinks} aria-label="Navigation">
+          <Link href="/search" className={active === 'search' ? s.navLinkActive : ''}>Search</Link>
+          {['society_admin', 'superadmin'].includes(user?.role || '') && <Link href="/committee" className={active === 'committee' ? s.navLinkActive : ''}>Digest</Link>}
           {active === 'dashboard' ? (
             <span className={s.navLinkActive}>Dashboard</span>
           ) : (
@@ -77,6 +74,7 @@ export default function SharedNav({ active }: SharedNavProps) {
           </button>
         </div>
       </div>
+      <div className={s.mobileLinks} aria-label="Mobile workspace navigation"><Link href="/dashboard">Dashboard</Link><Link href="/search">Search</Link><Link href="/problems/new">Report</Link><Link href="/groups">Groups</Link>{['society_admin', 'superadmin'].includes(user?.role || '') && <Link href="/committee">Digest</Link>}</div>
     </nav>
   );
 }

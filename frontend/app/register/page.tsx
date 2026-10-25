@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authApi, extractError } from '@/lib/api';
+import AuthStory from '@/components/AuthStory';
 import styles from '../auth.module.css';
 
 const passwordChecks = [
@@ -99,53 +100,14 @@ export default function RegisterPage() {
 
   return (
     <main className={styles.authPage}>
-      <section className={styles.visualPanel} aria-label="Prayaas registration overview">
-        <Link className={styles.brand} href="/">
-          <span className={styles.brandMark} aria-hidden="true" />
-          <span className={styles.brandText}>
-            <strong>Prayaas</strong>
-            <span>Societal evolution</span>
-          </span>
-        </Link>
-
-        <div>
-          <div className={styles.heroCopy}>
-            <span>Resident onboarding</span>
-            <h1>Create your society account.</h1>
-            <p>
-              Join your community workspace, report issues clearly and help committees move from scattered complaints
-              to visible progress.
-            </p>
-          </div>
-
-          <div className={styles.societyCard}>
-            <div className={styles.metricGrid}>
-              <div className={styles.metric}>
-                <span className={styles.metricLabel}>Drafts</span>
-                <strong>2m</strong>
-                <span>Average report time</span>
-              </div>
-              <div className={styles.metric}>
-                <span className={styles.metricLabel}>Reviews</span>
-                <strong>4.8</strong>
-                <span>Resident sentiment</span>
-              </div>
-              <div className={styles.metric}>
-                <span className={styles.metricLabel}>Routing</span>
-                <strong>92%</strong>
-                <span>First-pass clarity</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <AuthStory register />
 
       <section className={styles.formPanel}>
         <div className={styles.formCard}>
           <header className={styles.formHeader}>
-            <span className={styles.formEyebrow}>Start free</span>
-            <h1>Join Prayaas</h1>
-            <p>Create your resident account with a strong password and your society flat details.</p>
+            <span className={styles.formEyebrow}>THERE IS A PLACE FOR YOU HERE</span>
+            <h1>Come on in.</h1>
+            <p>A few details, and you are one step closer to your community.</p>
           </header>
 
           <form className={styles.form} onSubmit={handleSubmit}>
@@ -174,10 +136,10 @@ export default function RegisterPage() {
               </ul>
             </div>
 
-            {error ? <div className={styles.errorBox}>{error}</div> : null}
+            {error ? <div className={styles.errorBox} role="alert">{error}</div> : null}
 
             <button className={styles.submitButton} disabled={loading} id="register-submit" type="submit">
-              {loading ? <span className={styles.spinner} /> : 'Create account'}
+              {loading ? <span className={styles.spinner} role="status" aria-label="Creating account" /> : 'Create account'}
             </button>
           </form>
 

@@ -1,0 +1,8 @@
+{
+  "rule": "max p95, then max mean; independently per side",
+  "mode": "stub",
+  "selected": {
+    "old": "old-2",
+    "new": "new-2"
+  }
+}

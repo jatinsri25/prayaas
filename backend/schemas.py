@@ -76,6 +76,7 @@ class UserOut(BaseModel):
     phone: Optional[str]
     avatar_color: str
     created_at: datetime
+    role: str = "resident"
 
     class Config:
         from_attributes = True
@@ -145,11 +146,14 @@ class AIProblemDraft(BaseModel):
     location: str
     severity: str
     formatted_description: str
+    description_en: Optional[str] = None
+    description_hi: Optional[str] = None
+    raw_input: Optional[str] = None
+    cache_hit: bool = False
     affected_residents: str
     solutions: List[SolutionItem]
-    # Confidence-gated pipeline telemetry — exposed to frontend so the
-    # "Review draft" UI can show a confidence badge and an "AI escalated to
-    # a stronger model" banner when relevant.
+    # Legacy telemetry field names retained for compatibility. The report path
+    # now retries only malformed output, not low confidence or a stronger model.
     confidence_score: Optional[float] = None
     was_escalated: Optional[bool] = None
     last_model_used: Optional[str] = None
@@ -166,6 +170,11 @@ class ProblemOut(BaseModel):
     id: int
     title: str
     formatted_description: str
+    description_en: Optional[str] = None
+    description_hi: Optional[str] = None
+    raw_input: Optional[str] = None
+    input_language: Optional[str] = "en"
+    drafting_mode: Optional[str] = "ai"
     category: str
     severity: str
     location: Optional[str]
@@ -181,6 +190,12 @@ class ProblemOut(BaseModel):
     last_model_used: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+
+    @field_validator("raw_input")
+    @classmethod
+    def redact_original(cls, value):
+        from agent.pii import redact_pii
+        return redact_pii(value)[0] if value else value
 
     class Config:
         from_attributes = True

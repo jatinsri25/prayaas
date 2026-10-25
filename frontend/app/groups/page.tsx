@@ -185,7 +185,7 @@ export default function GroupsPage() {
                     <div
                       style={{
                         width: 44, height: 44, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #4f8ef7, #32d6b8)',
+                        background: '#829b72',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '1.2rem',
                       }}

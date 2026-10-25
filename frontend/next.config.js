@@ -1,9 +1,10 @@
 /** @type {import('next').NextConfig} */
+const isProduction = process.env.NODE_ENV === 'production';
 const securityHeaders = [
-  {
+  ...(isProduction ? [{
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload'
-  },
+  }] : []),
   {
     key: 'Content-Security-Policy',
     value: [
@@ -16,7 +17,7 @@ const securityHeaders = [
       "object-src 'none'",
       "base-uri 'self'",
       "frame-ancestors 'none'",
-      "upgrade-insecure-requests"
+      ...(isProduction ? ["upgrade-insecure-requests"] : [])
     ].join('; ')
   },
   { key: 'X-Content-Type-Options',   value: 'nosniff' },
@@ -29,6 +30,9 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // Keep `next build` from overwriting a running development server's chunks.
+  distDir: isProduction ? '.next' : '.next-dev',
+  outputFileTracingRoot: __dirname,
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: false },
   async headers() {

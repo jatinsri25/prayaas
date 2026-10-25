@@ -1,0 +1,54 @@
+.scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.window {
+  animation: windowLight 8s ease-in-out infinite;
+}
+.leaves {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: breeze 7s ease-in-out infinite;
+}
+.neighbour {
+  animation: stroll 12s ease-in-out infinite;
+}
+.neighbourTwo {
+  animation: stroll 14s ease-in-out infinite reverse;
+}
+@keyframes windowLight {
+  0%,
+  30%,
+  100% {
+    fill: #e9c777;
+  }
+  55%,
+  75% {
+    fill: #748267;
+  }
+}
+@keyframes breeze {
+  0%,
+  100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes stroll {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(12px, 6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene * {
+    animation: none;
+  }
+}

@@ -27,6 +27,7 @@ backend/token.txt
 # ── Node / Next.js ───────────────────────────────────────────────────────────
 node_modules/
 frontend/.next/
+frontend/.next-dev/
 frontend/out/
 frontend/.npm
 frontend/.env.local

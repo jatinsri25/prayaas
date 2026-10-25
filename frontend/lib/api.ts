@@ -9,7 +9,8 @@
  *  - withCredentials for cookie-based auth
  */
 
-import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import axios, { type InternalAxiosRequestConfig } from 'axios';
+import { ReportStreamReader, type ReportStage } from './report-stream';
 import {
   getAccessToken,
   setAccessToken,
@@ -17,6 +18,7 @@ import {
   clearAuth,
   refreshAccessToken,
   getCsrfToken,
+  getUser,
 } from './auth';
 
 type ApiValidationDetail = {
@@ -26,6 +28,7 @@ type ApiValidationDetail = {
 
 type ApiErrorShape = {
   response?: {
+    status?: number;
     data?: {
       detail?: unknown;
       message?: unknown;
@@ -56,7 +59,12 @@ export function extractError(err: unknown, fallback: string): string {
     if (messages.length) return messages.join(', ');
   }
   if (typeof message === 'string') return cleanValidationMessage(message);
-  if (apiError.code === 'ERR_NETWORK') return 'Could not reach the Prayaas server. Check that the backend is running.';
+  if (apiError.code === 'ECONNABORTED' || apiError.code === 'ETIMEDOUT') {
+    return 'The request took too long. Please try again.';
+  }
+  if (apiError.code === 'ERR_NETWORK' || (apiError.response?.status ?? 0) >= 500) {
+    return 'Prayaas is temporarily unavailable. Please try again in a moment.';
+  }
   if (typeof apiError.message === 'string' && apiError.message !== 'Network Error') return apiError.message;
   return fallback;
 }
@@ -68,6 +76,7 @@ const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,  // send cookies (refresh token, CSRF)
+  timeout: 15000,
 });
 
 // ── Request Interceptor ──────────────────────────────────────────────────────
@@ -93,64 +102,33 @@ api.interceptors.request.use((config) => {
 
 // ── Response Interceptor (auto-refresh on 401) ──────────────────────────────
 
-let _isRefreshing = false;
-let _failedQueue: Array<{
-  resolve: (value: AxiosResponse | PromiseLike<AxiosResponse>) => void;
-  reject: (reason: unknown) => void;
-  config: AxiosRequestConfig;
-}> = [];
-
-function processQueue(error: unknown) {
-  _failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(api(prom.config));
-    }
-  });
-  _failedQueue = [];
-}
+type RetryableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
 
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
-    const originalRequest = err.config;
+    const originalRequest: RetryableRequest | undefined = err.config;
 
     // Don't retry refresh endpoint itself or already-retried requests
     if (
       err.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes('/api/auth/refresh') &&
-      !originalRequest.url?.includes('/api/auth/login')
+      !/\/api\/auth\/(refresh|login|register|logout)(?:\?|$)/.test(originalRequest.url || '')
     ) {
-      if (_isRefreshing) {
-        // Queue this request until refresh completes
-        return new Promise((resolve, reject) => {
-          _failedQueue.push({ resolve, reject, config: originalRequest });
-        });
-      }
-
       originalRequest._retry = true;
-      _isRefreshing = true;
-
-      try {
-        const refreshed = await refreshAccessToken();
-        if (refreshed) {
-          processQueue(null);
-          // Retry the original request with new token
-          originalRequest.headers.Authorization = `Bearer ${getAccessToken()}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        processQueue(refreshError);
-      } finally {
-        _isRefreshing = false;
+      // All concurrent 401s await the same refresh promise, including failures.
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        originalRequest.headers.Authorization = `Bearer ${getAccessToken()}`;
+        return api(originalRequest);
       }
 
-      // Refresh failed — clear auth and redirect to login
-      clearAuth();
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (getUser()) {
+        return Promise.reject(new Error('Could not reconnect your session. Please try again.'));
+      }
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.replace('/login');
       }
     }
 
@@ -203,7 +181,7 @@ export const authApi = {
 
 export const groupsApi = {
   list: () => api.get('/api/groups'),
-  myGroups: () => api.get('/api/groups/my'),
+  myGroups: (signal?: AbortSignal) => api.get('/api/groups/my', { signal }),
   create: (data: { name: string; description?: string; is_public?: boolean }) =>
     api.post('/api/groups', data),
   get: (id: number) => api.get(`/api/groups/${id}`),
@@ -215,14 +193,32 @@ export const groupsApi = {
 // ── Problems API ──────────────────────────────────────────────────────────────
 
 export const problemsApi = {
-  list: (groupId?: number) =>
-    api.get('/api/problems', { params: groupId ? { group_id: groupId } : {} }),
+  aiStatus: () => api.get('/api/problems/ai-status'),
+  list: (groupId?: number, signal?: AbortSignal) =>
+    api.get('/api/problems', { params: groupId ? { group_id: groupId } : {}, signal }),
   get: (id: number) => api.get(`/api/problems/${id}`),
   process: (formData: FormData) =>
     api.post('/api/problems/process', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000, // 120 seconds — AI processing can take a while
     }),
+  processStream: async <T>(formData: FormData, onProgress: (stage: ReportStage) => void, signal: AbortSignal): Promise<T> => {
+    const reader = new ReportStreamReader<T>(onProgress);
+    const response = await api.post<string>('/api/problems/process/stream', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      responseType: 'text',
+      timeout: 95000,
+      signal,
+      onDownloadProgress: (progress) => {
+        const xhr = progress.event?.target as XMLHttpRequest | undefined;
+        if (xhr?.status === 200 && xhr.getResponseHeader('content-type')?.includes('application/x-ndjson')) {
+          reader.read(xhr.responseText);
+        }
+      },
+    });
+    reader.read(response.data);
+    return reader.finish();
+  },
   post: (formData: FormData) =>
     api.post('/api/problems', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },

@@ -1,0 +1,18 @@
+SIMULATED PROVIDER COMPARISON: fixed-delay SDK stub, not production measurements.
+
+| metric | old-2 | new-2 | change |
+|---|---|---|---|
+| p50 latency (s) | 0.225 | 0.122 | -45.78% |
+| p95 latency (s) | 0.232 | 0.147 | -36.64% |
+| mean latency (s) | 0.225 | 0.126 | -44.00% |
+| generation calls / successful report | 2.0 | 1.0 | -50.00% |
+| non-generation time (s) | 0.010884 | 0.018602 | +70.91% |
+| tokens / report | None | None | n/a |
+| cost / report (USD) | None | None | n/a |
+| event-loop stall max (ms) | 8980.6 | 5.7 | -99.94% |
+| event-loop stall p99 (ms) | None | 5.6 | n/a |
+| error rate | 0.0 | 0.0 | n/a |
+| throughput (req/s) | 4.449 | 31.023 | +597% |
+
+Only claim structural call counts and responsiveness under the specified stub. Output fixtures do not test quality.
+Missing usage/prices are unknown, never free. Cost excludes embedding and transcription calls.

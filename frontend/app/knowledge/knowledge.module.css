@@ -39,7 +39,7 @@
 .askInput {
   flex: 1;
   padding: 16px 20px;
-  border-radius: 14px;
+  border-radius: 4px;
   border: 0.5px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.04);
   color: #f0f0f6;
@@ -56,10 +56,10 @@
 
 .askButton {
   padding: 16px 24px;
-  border-radius: 14px;
+  border-radius: 4px;
   border: none;
-  background: linear-gradient(120deg, #4f8ef7, #7c5cf7);
-  color: white;
+  background: #c4d3b1;
+  color: #243d32;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

@@ -1,0 +1,88 @@
+{
+  "adapter_mode": "mock",
+  "dataset": "/Users/jatinsrivastava/Downloads/Prayaas/prayaas-evals/data/sample_labelled.jsonl",
+  "n": 14,
+  "category": {
+    "n": 14,
+    "accuracy": 1.0,
+    "macro_f1": 1.0,
+    "per_class": {
+      "electricity": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "lift": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "parking": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "security": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "waste": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "water": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "top_confusions": []
+  },
+  "severity": {
+    "n": 14,
+    "exact": 0.9285714285714286,
+    "within_one": 1.0,
+    "mean_abs_error": 0.07142857142857142
+  },
+  "selective": [
+    {
+      "threshold": 0.5,
+      "coverage": 1.0,
+      "accuracy": 1.0
+    },
+    {
+      "threshold": 0.6,
+      "coverage": 1.0,
+      "accuracy": 1.0
+    },
+    {
+      "threshold": 0.7,
+      "coverage": 0.9285714285714286,
+      "accuracy": 1.0
+    },
+    {
+      "threshold": 0.8,
+      "coverage": 0.5714285714285714,
+      "accuracy": 1.0
+    },
+    {
+      "threshold": 0.9,
+      "coverage": 0.2857142857142857,
+      "accuracy": 1.0
+    }
+  ],
+  "pipeline_errors": 0,
+  "dedup": {
+    "tp": 2,
+    "fp": 0,
+    "fn": 1,
+    "tn": 11,
+    "errors": 0,
+    "precision": 1.0,
+    "recall": 0.6666666666666666,
+    "f1": 0.8,
+    "true_duplicates": 3
+  }
+}
